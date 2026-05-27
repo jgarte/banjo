@@ -360,24 +360,4 @@ canvas.addEventListener("touchend", (e) => {
   }
 });
 
-// Language toggle for hint text
-const hintElement = document.getElementById("hint");
-let isSpanish = true; // Default to Spanish
-
-const translations = {
-  es: "toca la nota para mostrarla · toca el diapasón para ir a la siguiente nota",
-  en: "tap the note to show it · tap the board to go to the next note",
-};
-
-hintElement.addEventListener("click", () => {
-  isSpanish = !isSpanish;
-  hintElement.textContent = isSpanish ? translations.es : translations.en;
-});
-
-hintElement.addEventListener("touchend", (e) => {
-  e.preventDefault();
-  isSpanish = !isSpanish;
-  hintElement.textContent = isSpanish ? translations.es : translations.en;
-});
-
 nextQuestion();
