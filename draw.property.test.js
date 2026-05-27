@@ -49,24 +49,28 @@ function createMockCanvas(width = 300, height = 500) {
   return { width, height };
 }
 
-// All valid notes in the requinto (C-D-G-C tuning)
+// All valid notes on the banjo (C-G-D-A tuning)
 const allValidNotes = [
   { string: 4, fret: 0, note: "C" },
   { string: 4, fret: 2, note: "D" },
-  { string: 3, fret: 0, note: "D" },
-  { string: 3, fret: 2, note: "E" },
-  { string: 3, fret: 3, note: "F" },
-  { string: 2, fret: 0, note: "G" },
-  { string: 2, fret: 2, note: "A" },
-  { string: 2, fret: 4, note: "B" },
-  { string: 1, fret: 0, note: "C" },
-  { string: 1, fret: 2, note: "D" },
-  { string: 1, fret: 4, note: "E" },
-  { string: 1, fret: 5, note: "F" },
+  { string: 4, fret: 4, note: "E" },
+  { string: 4, fret: 5, note: "F" },
+  { string: 3, fret: 0, note: "G" },
+  { string: 3, fret: 2, note: "A" },
+  { string: 3, fret: 4, note: "B" },
+  { string: 3, fret: 5, note: "C" },
+  { string: 2, fret: 0, note: "D" },
+  { string: 2, fret: 2, note: "E" },
+  { string: 2, fret: 3, note: "F" },
+  { string: 2, fret: 5, note: "G" },
+  { string: 1, fret: 0, note: "A" },
+  { string: 1, fret: 2, note: "B" },
+  { string: 1, fret: 3, note: "C" },
+  { string: 1, fret: 5, note: "D" },
 ];
 
 test("property: drawFretboard never throws for any valid note and showingAnswer combination", () => {
-  // Test EVERY possible case: 12 notes × 2 showingAnswer states = 24 cases
+  // Test EVERY possible case: 16 notes × 2 showingAnswer states = 32 cases
   fc.assert(
     fc.property(
       fc.constantFrom(...allValidNotes),
@@ -81,7 +85,7 @@ test("property: drawFretboard never throws for any valid note and showingAnswer 
         });
       },
     ),
-    { numRuns: 24 }, // We have exactly 24 combinations to test
+    { numRuns: 32 }, // We have exactly 32 combinations to test
   );
 });
 
@@ -245,7 +249,7 @@ test("property: drawNut creates exactly one stroke", () => {
 });
 
 // Exhaustive test: every single note with both showingAnswer states
-test("exhaustive: all 12 notes × 2 states = 24 cases", () => {
+test("exhaustive: all 16 notes × 2 states = 32 cases", () => {
   let testCount = 0;
 
   for (const note of allValidNotes) {
@@ -261,7 +265,7 @@ test("exhaustive: all 12 notes × 2 states = 24 cases", () => {
     }
   }
 
-  assert.strictEqual(testCount, 24, "Should have tested exactly 24 cases");
+  assert.strictEqual(testCount, 32, "Should have tested exactly 32 cases");
 });
 
 test("property: explore mode shows all notes with labels", () => {
@@ -270,17 +274,17 @@ test("property: explore mode shows all notes with labels", () => {
 
   drawFretboard(ctx, canvas, null, false, allValidNotes);
 
-  // Should have 12 arc calls (one per note)
+  // Should have 16 arc calls (one per note)
   const arcCalls = ctx.calls.filter(
     (call) => Array.isArray(call) && call[0] === "arc",
   );
-  // Plus natural note markers (12 natural notes in the array)
+  // Plus natural note markers (16 natural notes in the array)
   assert.ok(
-    arcCalls.length >= 12,
-    `Expected at least 12 arc calls, got ${arcCalls.length}`,
+    arcCalls.length >= 16,
+    `Expected at least 16 arc calls, got ${arcCalls.length}`,
   );
 
-  // Should have 12 fillText calls with note names
+  // Should have 16 fillText calls with note names
   const noteLabelCalls = ctx.calls.filter(
     (call) =>
       Array.isArray(call) &&
@@ -289,8 +293,8 @@ test("property: explore mode shows all notes with labels", () => {
   );
   assert.strictEqual(
     noteLabelCalls.length,
-    12,
-    "Should show all 12 note labels in explore mode",
+    16,
+    "Should show all 16 note labels in explore mode",
   );
 });
 
@@ -311,7 +315,7 @@ test("property: explore mode and training mode are mutually exclusive", () => {
   );
   assert.strictEqual(
     noteLabelCalls.length,
-    12,
+    16,
     "Should show all notes when in explore mode",
   );
 });

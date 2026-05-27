@@ -1,23 +1,22 @@
-# requinto
+# banjo
 
 [![builds.sr.ht status](https://builds.sr.ht/~whereiseveryone/requinto.svg)](https://builds.sr.ht/~whereiseveryone/requinto?)
 
-web app for training note recognition in open position on the requinto
+web app for training note recognition in open position on the tenor banjo
 
 https://requinto.whereis.social/
 
-the requinto, also known as the guitarra de
-son, is a four string instrument used in [son
-jarocho](https://en.wikipedia.org/wiki/Son_jarocho) musics
+the tenor banjo is a four string instrument tuned in fifths (C-G-D-A),
+used in irish and jazz musics
 
 ## features
 
 - visual fretboard with interactive note practice
-- audio playback with nylon string sound
+- audio playback with a bright banjo string sound
 - mobile-friendly responsive design
 - vanilla js and css
 - property-based tests check all note/state combinations
-- double tap fretboard to display and play through all notes
+- double tap fretboard to display all notes, then tap a note to hear it
 
 ## todos
 

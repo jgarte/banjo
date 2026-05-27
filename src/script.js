@@ -1,5 +1,5 @@
-// requinto
-// Copyright (C) 2025 jgart
+// banjo
+// Copyright (C) 2026 jgart
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -19,19 +19,23 @@ import { drawFretboard } from "./draw.js";
 const notes = [
   { string: 4, fret: 0, note: "C" },
   { string: 4, fret: 2, note: "D" },
+  { string: 4, fret: 4, note: "E" },
+  { string: 4, fret: 5, note: "F" },
 
-  { string: 3, fret: 0, note: "D" },
-  { string: 3, fret: 2, note: "E" },
-  { string: 3, fret: 3, note: "F" },
+  { string: 3, fret: 0, note: "G" },
+  { string: 3, fret: 2, note: "A" },
+  { string: 3, fret: 4, note: "B" },
+  { string: 3, fret: 5, note: "C" },
 
-  { string: 2, fret: 0, note: "G" },
-  { string: 2, fret: 2, note: "A" },
-  { string: 2, fret: 4, note: "B" },
+  { string: 2, fret: 0, note: "D" },
+  { string: 2, fret: 2, note: "E" },
+  { string: 2, fret: 3, note: "F" },
+  { string: 2, fret: 5, note: "G" },
 
-  { string: 1, fret: 0, note: "C" },
-  { string: 1, fret: 2, note: "D" },
-  { string: 1, fret: 4, note: "E" },
-  { string: 1, fret: 5, note: "F" },
+  { string: 1, fret: 0, note: "A" },
+  { string: 1, fret: 2, note: "B" },
+  { string: 1, fret: 3, note: "C" },
+  { string: 1, fret: 5, note: "D" },
 ];
 
 let currentNote = null;
@@ -55,7 +59,7 @@ const COUNTER_API = "http://localhost:8787";
 const countElement = document.getElementById("count");
 
 function renderCount(value) {
-  countElement.textContent = `${value} notas mostradas`;
+  countElement.textContent = `${value} notes shown`;
 }
 
 // Read the current global count on load; stay silent if the backend is down.
@@ -78,12 +82,12 @@ const ctx = canvas.getContext("2d");
 // Audio setup
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-// Open string frequencies for C-D-G-C tuning
+// Open string frequencies for C-G-D-A tuning
 const openStringFrequencies = {
   4: 130.81, // C3
-  3: 146.83, // D3
-  2: 196.0, // G3
-  1: 261.63, // C4
+  3: 196.0, // G3
+  2: 293.66, // D4
+  1: 440.0, // A4
 };
 
 function getNoteFrequency(note) {
@@ -94,30 +98,31 @@ function getNoteFrequency(note) {
 
 function playNote(frequency) {
   const now = audioContext.currentTime;
-  const duration = 2.5;
+  const duration = 1.3;
 
-  // Create a low-pass filter to simulate body resonance
+  // Create a low-pass filter with a bright, resonant cutoff for the
+  // metallic banjo timbre
   const filter = audioContext.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.setValueAtTime(3000, now);
-  filter.Q.setValueAtTime(1, now);
+  filter.frequency.setValueAtTime(5500, now);
+  filter.Q.setValueAtTime(2, now);
 
-  // Master gain for overall volume
+  // Master gain: sharp pluck attack and fast decay
   const masterGain = audioContext.createGain();
   masterGain.gain.setValueAtTime(0, now);
-  masterGain.gain.linearRampToValueAtTime(0.25, now + 0.003); // Very quick attack
-  masterGain.gain.exponentialRampToValueAtTime(0.15, now + 0.05); // Initial bright decay
-  masterGain.gain.exponentialRampToValueAtTime(0.05, now + 0.3); // Settle
-  masterGain.gain.exponentialRampToValueAtTime(0.01, now + duration); // Long decay
+  masterGain.gain.linearRampToValueAtTime(0.3, now + 0.002); // Sharp attack
+  masterGain.gain.exponentialRampToValueAtTime(0.08, now + 0.08); // Quick initial decay
+  masterGain.gain.exponentialRampToValueAtTime(0.01, now + duration); // Fast tail
 
-  // Create harmonics for richer sound (fundamental + overtones)
+  // Create harmonics for richer sound, weighted toward the upper
+  // partials that give a banjo its bright twang
   const harmonics = [
-    { freq: frequency, gain: 0.4 }, // Fundamental
-    { freq: frequency * 2, gain: 0.3 }, // 2nd harmonic
-    { freq: frequency * 3, gain: 0.15 }, // 3rd harmonic
-    { freq: frequency * 4, gain: 0.08 }, // 4th harmonic
-    { freq: frequency * 5, gain: 0.04 }, // 5th harmonic
-    { freq: frequency * 6, gain: 0.02 }, // 6th harmonic
+    { freq: frequency, gain: 0.35 }, // Fundamental
+    { freq: frequency * 2, gain: 0.32 }, // 2nd harmonic
+    { freq: frequency * 3, gain: 0.25 }, // 3rd harmonic
+    { freq: frequency * 4, gain: 0.18 }, // 4th harmonic
+    { freq: frequency * 5, gain: 0.1 }, // 5th harmonic
+    { freq: frequency * 6, gain: 0.06 }, // 6th harmonic
   ];
 
   harmonics.forEach((harmonic, index) => {
@@ -128,8 +133,8 @@ function playNote(frequency) {
     const harmonicGain = audioContext.createGain();
     harmonicGain.gain.setValueAtTime(harmonic.gain, now);
 
-    // Higher harmonics decay faster (nylon string characteristic)
-    const decayRate = 1 + index * 0.3;
+    // Higher harmonics decay faster (banjo string characteristic)
+    const decayRate = 1 + index * 0.4;
     harmonicGain.gain.exponentialRampToValueAtTime(
       harmonic.gain * 0.01,
       now + duration / decayRate,

@@ -1,5 +1,5 @@
-// requinto
-// Copyright (C) 2025 jgart
+// banjo
+// Copyright (C) 2026 jgart
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -74,23 +74,27 @@ export function drawFretboard(
   drawNut(ctx, canvas, config);
   drawStrings(ctx, canvas, config);
 
-  // Draw natural note markers (C-D-G-C tuning)
-  // String 4 (C): frets 0, 2
-  // String 3 (D): frets 0, 2, 3
-  // String 2 (G): frets 0, 2, 4
-  // String 1 (C): frets 0, 2, 4, 5
+  // Draw natural note markers (C-G-D-A tuning)
+  // String 4 (C): frets 0, 2, 4, 5
+  // String 3 (G): frets 0, 2, 4, 5
+  // String 2 (D): frets 0, 2, 3, 5
+  // String 1 (A): frets 0, 2, 3, 5
   const naturalNotes = [
     { string: 4, fret: 0 },
     { string: 4, fret: 2 },
+    { string: 4, fret: 4 },
+    { string: 4, fret: 5 },
     { string: 3, fret: 0 },
     { string: 3, fret: 2 },
-    { string: 3, fret: 3 },
+    { string: 3, fret: 4 },
+    { string: 3, fret: 5 },
     { string: 2, fret: 0 },
     { string: 2, fret: 2 },
-    { string: 2, fret: 4 },
+    { string: 2, fret: 3 },
+    { string: 2, fret: 5 },
     { string: 1, fret: 0 },
     { string: 1, fret: 2 },
-    { string: 1, fret: 4 },
+    { string: 1, fret: 3 },
     { string: 1, fret: 5 },
   ];
 
