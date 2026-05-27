@@ -14,6 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// This module synthesises note playback with the Web Audio API. Each note is
+// built as a short-lived graph of audio nodes: several OscillatorNodes (the
+// harmonics), each through its own GainNode, summed into a low-pass
+// BiquadFilterNode, then a master GainNode, and finally the AudioContext's
+// output (destination):
+//
+//   oscillators -> per-harmonic gains -> filter -> master gain -> destination
+//
+// https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+
 // Open string frequencies for C-G-D-A tuning
 /** @type {Record<number, number>} */
 const openStringFrequencies = {
@@ -33,27 +43,39 @@ export function getNoteFrequency(note) {
   return openFreq * Math.pow(2, note.fret / 12);
 }
 
-// Created lazily on first playback so this module can be imported outside a
-// browser (e.g. tests) and so the context starts after a user gesture, as
-// browsers require.
+// The AudioContext is the entry point to the Web Audio API: it owns the audio
+// graph and its clock (currentTime). Created lazily on first playback so this
+// module can be imported outside a browser (e.g. tests) and so the context
+// starts after a user gesture, as browsers require.
+// https://developer.mozilla.org/en-US/docs/Web/API/AudioContext
 /** @type {AudioContext | undefined} */
 let audioContext;
 
-/** @param {number} frequency */
+/**
+ * Play a single plucked note by building and starting a short Web Audio graph.
+ * @param {number} frequency
+ */
 export function playNote(frequency) {
   const audio = (audioContext ??= new (window.AudioContext ||
     /** @type {any} */ (window).webkitAudioContext)());
+  // currentTime is the context's running clock, used to schedule the envelopes.
   const now = audio.currentTime;
   const duration = 1.3;
 
-  // Create a low-pass filter with a bright, resonant cutoff for the
-  // metallic banjo timbre
+  // BiquadFilterNode is a configurable frequency filter; a "lowpass" type with
+  // a bright, resonant cutoff (frequency/Q are AudioParams) shapes the metallic
+  // banjo timbre.
+  // https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode
   const filter = audio.createBiquadFilter();
   filter.type = "lowpass";
   filter.frequency.setValueAtTime(5500, now);
   filter.Q.setValueAtTime(2, now);
 
-  // Master gain: sharp pluck attack and fast decay
+  // GainNode controls volume; its .gain is an AudioParam whose value we automate
+  // over time (setValueAtTime, linear-/exponentialRampToValueAtTime) to shape
+  // the amplitude envelope — a sharp pluck attack and fast decay.
+  // https://developer.mozilla.org/en-US/docs/Web/API/GainNode
+  // https://developer.mozilla.org/en-US/docs/Web/API/AudioParam
   const masterGain = audio.createGain();
   masterGain.gain.setValueAtTime(0, now);
   masterGain.gain.linearRampToValueAtTime(0.3, now + 0.002); // Sharp attack
@@ -72,6 +94,9 @@ export function playNote(frequency) {
   ];
 
   harmonics.forEach((harmonic, index) => {
+    // OscillatorNode generates a periodic tone; one sine oscillator per
+    // harmonic, summed to build up the timbre.
+    // https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode
     const osc = audio.createOscillator();
     osc.type = "sine";
     osc.frequency.setValueAtTime(harmonic.freq, now);
@@ -93,7 +118,8 @@ export function playNote(frequency) {
     osc.stop(now + duration);
   });
 
-  // Connect filter to master gain to output
+  // AudioNode.connect wires the graph together; destination is the context's
+  // final output (the speakers).
   filter.connect(masterGain);
   masterGain.connect(audio.destination);
 }

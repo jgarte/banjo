@@ -33,6 +33,11 @@ let singleTapTimeout = null;
 // Spaced-repetition scheduler over the note set.
 const scheduler = createScheduler(notes.length);
 
+// DOM access: getElementById fetches the <canvas> element, and getContext("2d")
+// returns its CanvasRenderingContext2D — the handle used for all drawing (see
+// draw.js).
+// https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById
+// https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
 const canvas = /** @type {HTMLCanvasElement} */ (
   document.getElementById("fretboard")
 );
@@ -90,7 +95,9 @@ function handleCanvasClick(clientX, clientY) {
 
   // Check for double tap
   if (timeSinceLastTap < DOUBLE_TAP_DELAY) {
-    // Clear any pending single-tap action
+    // Clear any pending single-tap action. setTimeout/clearTimeout (the WHATWG
+    // timer API) defer and cancel the single-tap handler below.
+    // https://developer.mozilla.org/en-US/docs/Web/API/clearTimeout
     if (singleTapTimeout) {
       clearTimeout(singleTapTimeout);
       singleTapTimeout = null;
@@ -102,6 +109,10 @@ function handleCanvasClick(clientX, clientY) {
 
   lastTapTime = currentTime;
 
+  // getBoundingClientRect gives the canvas's size/position in CSS pixels; we
+  // scale the event's viewport coordinates into the canvas's internal pixel
+  // grid (which can differ from its displayed size).
+  // https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
@@ -130,7 +141,9 @@ function handleCanvasClick(clientX, clientY) {
       Math.pow(clickX - notePos.x, 2) + Math.pow(clickY - notePos.y, 2),
     );
 
-    // Delay the action to allow double-tap detection
+    // Delay the action with setTimeout to allow double-tap detection; the
+    // returned id is cleared above if a second tap arrives in time.
+    // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout
     singleTapTimeout = setTimeout(() => {
       if (distance < 20) {
         showAnswer();
@@ -156,7 +169,12 @@ function drawExploreMode() {
   drawFretboard(ctx, canvas, null, false, notes);
 }
 
-// Add click/touch event listeners
+// Input via the DOM events API (addEventListener). A "click" MouseEvent carries
+// clientX/clientY; a "touchend" TouchEvent carries them on changedTouches[0],
+// and preventDefault stops the browser also synthesising a click.
+// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
+// https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
 canvas.addEventListener("click", (e) => {
   handleCanvasClick(e.clientX, e.clientY);
 });

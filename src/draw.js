@@ -16,6 +16,14 @@
 
 import { notes } from "./notes.js";
 
+// This module renders the fretboard with the Canvas 2D API. All drawing goes
+// through a CanvasRenderingContext2D (`ctx`): the path methods (beginPath,
+// moveTo, lineTo, stroke) draw the fret and string lines, arc + fill/stroke
+// draw the note markers, fillText draws note names, and clearRect wipes the
+// canvas before each redraw. strokeStyle / fillStyle / lineWidth / font /
+// textAlign set the drawing state.
+// https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
+
 /**
  * @typedef {{
  *   padding: number,
@@ -32,7 +40,8 @@ import { notes } from "./notes.js";
  * @param {FretboardConfig} config
  */
 export function drawFrets(ctx, canvas, config) {
-  // Draw frets (horizontal lines)
+  // Draw frets as horizontal lines via the path API: beginPath starts a path,
+  // moveTo/lineTo define the segment, stroke renders it.
   ctx.strokeStyle = "#666";
   ctx.lineWidth = 2;
   for (let i = 0; i <= config.numFrets; i++) {
@@ -102,6 +111,7 @@ export function drawFretboard(
     (canvas.width - 2 * config.padding) / (config.numStrings - 1);
   config.fretSpacing = (canvas.height - 2 * config.padding) / config.numFrets;
 
+  // clearRect wipes the whole canvas before redrawing the frame.
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawFrets(ctx, canvas, config);
@@ -118,7 +128,8 @@ export function drawFretboard(
     let y;
 
     if (fretIndex === 0) {
-      // Position open string markers above the nut (hollow circles)
+      // Open string markers above the nut: ctx.arc traces a full circle
+      // (0 to 2π) that stroke() outlines (hollow).
       y = config.padding - 15;
       ctx.strokeStyle = "rgba(200, 200, 200, 0.5)";
       ctx.lineWidth = 1.5;
@@ -162,7 +173,8 @@ export function drawFretboard(
       ctx.arc(x, y, 12, 0, 2 * Math.PI);
       ctx.fill();
 
-      // Always show note name in explore mode
+      // Label the note: fillText draws text, with font/textAlign controlling
+      // its typeface and horizontal anchoring.
       ctx.fillStyle = "#FFF";
       ctx.font = "bold 16px sans-serif";
       ctx.textAlign = "center";
