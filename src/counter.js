@@ -22,18 +22,24 @@ export function createCounter(apiUrl, element, fetchImpl = fetch) {
     element.textContent = `${value} notes shown`;
   }
 
-  function refresh() {
-    return fetchImpl(apiUrl)
-      .then((res) => res.json())
-      .then(({ value }) => render(value))
-      .catch(() => {});
+  async function refresh() {
+    try {
+      const res = await fetchImpl(apiUrl);
+      const { value } = await res.json();
+      render(value);
+    } catch {
+      // Stay silent if the backend is unreachable.
+    }
   }
 
-  function record() {
-    return fetchImpl(apiUrl, { method: "POST" })
-      .then((res) => res.json())
-      .then(({ value }) => render(value))
-      .catch(() => {});
+  async function record() {
+    try {
+      const res = await fetchImpl(apiUrl, { method: "POST" });
+      const { value } = await res.json();
+      render(value);
+    } catch {
+      // Stay silent if the backend is unreachable.
+    }
   }
 
   return { refresh, record };
