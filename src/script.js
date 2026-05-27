@@ -15,28 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { drawFretboard } from "./draw.js";
-
-const notes = [
-  { string: 4, fret: 0, note: "C" },
-  { string: 4, fret: 2, note: "D" },
-  { string: 4, fret: 4, note: "E" },
-  { string: 4, fret: 5, note: "F" },
-
-  { string: 3, fret: 0, note: "G" },
-  { string: 3, fret: 2, note: "A" },
-  { string: 3, fret: 4, note: "B" },
-  { string: 3, fret: 5, note: "C" },
-
-  { string: 2, fret: 0, note: "D" },
-  { string: 2, fret: 2, note: "E" },
-  { string: 2, fret: 3, note: "F" },
-  { string: 2, fret: 5, note: "G" },
-
-  { string: 1, fret: 0, note: "A" },
-  { string: 1, fret: 2, note: "B" },
-  { string: 1, fret: 3, note: "C" },
-  { string: 1, fret: 5, note: "D" },
-];
+import { notes } from "./notes.js";
+import { getNoteFrequency, playNote } from "./audio.js";
+import { createCounter } from "./counter.js";
+import { createScheduler } from "./spaced-repetition.js";
 
 let currentNote = null;
 let showingAnswer = false;
@@ -47,142 +29,23 @@ let lastTapTime = 0;
 const DOUBLE_TAP_DELAY = 200; // milliseconds
 let singleTapTimeout = null;
 
-// Spaced repetition: track when each note was last shown
-const noteHistory = new Map();
-notes.forEach((note, index) => {
-  noteHistory.set(index, Date.now() - index * 1000); // Stagger initial times
-});
+// Global practice counter backend (see server.js). Point the URL at your
+// deployed endpoint in production.
+const counter = createCounter(
+  "http://localhost:8787",
+  document.getElementById("count"),
+);
+counter.refresh();
 
-// Global practice counter backend (see server.js). Defaults to the local
-// dev server; point this at your deployed endpoint in production.
-const COUNTER_API = "http://localhost:8787";
-const countElement = document.getElementById("count");
-
-function renderCount(value) {
-  countElement.textContent = `${value} notes shown`;
-}
-
-// Read the current global count on load; stay silent if the backend is down.
-fetch(COUNTER_API)
-  .then((res) => res.json())
-  .then(({ value }) => renderCount(value))
-  .catch(() => {});
-
-// Record one practiced note and show the updated global count.
-function recordPractice() {
-  fetch(COUNTER_API, { method: "POST" })
-    .then((res) => res.json())
-    .then(({ value }) => renderCount(value))
-    .catch(() => {});
-}
+// Spaced-repetition scheduler over the note set.
+const scheduler = createScheduler(notes.length);
 
 const canvas = document.getElementById("fretboard");
 const ctx = canvas.getContext("2d");
 
-// Audio setup
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-// Open string frequencies for C-G-D-A tuning
-const openStringFrequencies = {
-  4: 130.81, // C3
-  3: 196.0, // G3
-  2: 293.66, // D4
-  1: 440.0, // A4
-};
-
-function getNoteFrequency(note) {
-  const openFreq = openStringFrequencies[note.string];
-  // Each fret increases pitch by one semitone (multiply by 2^(1/12))
-  return openFreq * Math.pow(2, note.fret / 12);
-}
-
-function playNote(frequency) {
-  const now = audioContext.currentTime;
-  const duration = 1.3;
-
-  // Create a low-pass filter with a bright, resonant cutoff for the
-  // metallic banjo timbre
-  const filter = audioContext.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(5500, now);
-  filter.Q.setValueAtTime(2, now);
-
-  // Master gain: sharp pluck attack and fast decay
-  const masterGain = audioContext.createGain();
-  masterGain.gain.setValueAtTime(0, now);
-  masterGain.gain.linearRampToValueAtTime(0.3, now + 0.002); // Sharp attack
-  masterGain.gain.exponentialRampToValueAtTime(0.08, now + 0.08); // Quick initial decay
-  masterGain.gain.exponentialRampToValueAtTime(0.01, now + duration); // Fast tail
-
-  // Create harmonics for richer sound, weighted toward the upper
-  // partials that give a banjo its bright twang
-  const harmonics = [
-    { freq: frequency, gain: 0.35 }, // Fundamental
-    { freq: frequency * 2, gain: 0.32 }, // 2nd harmonic
-    { freq: frequency * 3, gain: 0.25 }, // 3rd harmonic
-    { freq: frequency * 4, gain: 0.18 }, // 4th harmonic
-    { freq: frequency * 5, gain: 0.1 }, // 5th harmonic
-    { freq: frequency * 6, gain: 0.06 }, // 6th harmonic
-  ];
-
-  harmonics.forEach((harmonic, index) => {
-    const osc = audioContext.createOscillator();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(harmonic.freq, now);
-
-    const harmonicGain = audioContext.createGain();
-    harmonicGain.gain.setValueAtTime(harmonic.gain, now);
-
-    // Higher harmonics decay faster (banjo string characteristic)
-    const decayRate = 1 + index * 0.4;
-    harmonicGain.gain.exponentialRampToValueAtTime(
-      harmonic.gain * 0.01,
-      now + duration / decayRate,
-    );
-
-    osc.connect(harmonicGain);
-    harmonicGain.connect(filter);
-
-    osc.start(now);
-    osc.stop(now + duration);
-  });
-
-  // Connect filter to master gain to output
-  filter.connect(masterGain);
-  masterGain.connect(audioContext.destination);
-}
-
-function selectNextNote() {
-  const now = Date.now();
-  const currentIndex = currentNote ? notes.indexOf(currentNote) : -1;
-
-  // Calculate weights based on time since last shown
-  const weights = notes.map((note, index) => {
-    if (index === currentIndex) return 0; // Never select the same note twice
-
-    const timeSinceShown = now - noteHistory.get(index);
-    // Weight increases with time: notes not seen for 10+ seconds get full weight
-    const weight = Math.min(timeSinceShown / 10000, 1);
-    return Math.max(weight, 0.1); // Minimum weight of 0.1 for all notes
-  });
-
-  // Weighted random selection
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-  let random = Math.random() * totalWeight;
-
-  for (let i = 0; i < notes.length; i++) {
-    random -= weights[i];
-    if (random <= 0) {
-      noteHistory.set(i, now); // Record when this note was shown
-      return notes[i];
-    }
-  }
-
-  return notes[0]; // Fallback
-}
-
 function nextQuestion() {
-  currentNote = selectNextNote();
+  const currentIndex = currentNote ? notes.indexOf(currentNote) : -1;
+  currentNote = notes[scheduler.next(currentIndex)];
   showingAnswer = false;
   drawFretboard(ctx, canvas, currentNote, showingAnswer);
 }
@@ -192,11 +55,10 @@ function showAnswer() {
   drawFretboard(ctx, canvas, currentNote, showingAnswer);
 
   // Play the note
-  const frequency = getNoteFrequency(currentNote);
-  playNote(frequency);
+  playNote(getNoteFrequency(currentNote));
 
   // Count this as one practiced note in the global tally.
-  recordPractice();
+  counter.record();
 }
 
 // Calculate note position on canvas
@@ -256,8 +118,7 @@ function handleCanvasClick(clientX, clientY) {
       );
 
       if (distance < 20) {
-        const frequency = getNoteFrequency(note);
-        playNote(frequency);
+        playNote(getNoteFrequency(note));
         return;
       }
     }

@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import { notes } from "./notes.js";
+
 export function drawFrets(ctx, canvas, config) {
   // Draw frets (horizontal lines)
   ctx.strokeStyle = "#666";
@@ -74,31 +76,9 @@ export function drawFretboard(
   drawNut(ctx, canvas, config);
   drawStrings(ctx, canvas, config);
 
-  // Draw natural note markers (C-G-D-A tuning)
-  // String 4 (C): frets 0, 2, 4, 5
-  // String 3 (G): frets 0, 2, 4, 5
-  // String 2 (D): frets 0, 2, 3, 5
-  // String 1 (A): frets 0, 2, 3, 5
-  const naturalNotes = [
-    { string: 4, fret: 0 },
-    { string: 4, fret: 2 },
-    { string: 4, fret: 4 },
-    { string: 4, fret: 5 },
-    { string: 3, fret: 0 },
-    { string: 3, fret: 2 },
-    { string: 3, fret: 4 },
-    { string: 3, fret: 5 },
-    { string: 2, fret: 0 },
-    { string: 2, fret: 2 },
-    { string: 2, fret: 3 },
-    { string: 2, fret: 5 },
-    { string: 1, fret: 0 },
-    { string: 1, fret: 2 },
-    { string: 1, fret: 3 },
-    { string: 1, fret: 5 },
-  ];
-
-  naturalNotes.forEach((note) => {
+  // Draw faint markers at every natural note in open position. The set
+  // comes from notes.js so the tuning lives in one place.
+  notes.forEach((note) => {
     const stringIndex = config.numStrings - note.string;
     const fretIndex = note.fret;
 
