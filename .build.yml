@@ -7,19 +7,19 @@ packages:
 oauth: pages.sr.ht/PAGES:RW
 tasks:
 - test: |
-    cd requinto
+    cd banjo
     npm install
     npm run build
     node --test
 - build: |
-    cd requinto
+    cd banjo
     mkdir -p dist
     esbuild src/script.js --bundle --minify --sourcemap --outfile=dist/bundle.js
     esbuild src/style.css --bundle --minify --sourcemap --outfile=dist/bundle.css
     sed 's/src="script.js"/src="bundle.js"/; s/href="style.css"/href="bundle.css"/' src/index.html > dist/index.html
     cp LICENSE dist/LICENSE
 - package: |
-    cd requinto/dist
+    cd banjo/dist
     tar -cvz . > ../../website.tar.gz
 - upload: |
-    hut pages publish --domain requinto.whereis.social website.tar.gz
+    hut pages publish --domain banjo.whereis.social website.tar.gz
