@@ -99,20 +99,11 @@ function handleCanvasClick(clientX, clientY) {
 }
 
 
-// Input via the DOM events API (addEventListener). A "click" MouseEvent carries
-// clientX/clientY; a "touchend" TouchEvent carries them on changedTouches[0],
-// and preventDefault stops the browser also synthesising a click.
+// Input via the DOM events API (addEventListener).
 // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
-// https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
 canvas.addEventListener("click", (e) => {
   handleCanvasClick(e.clientX, e.clientY);
-});
-
-canvas.addEventListener("touchend", (e) => {
-  e.preventDefault();
-  const touch = e.changedTouches[0];
-  handleCanvasClick(touch.clientX, touch.clientY);
 });
 
 nextQuestion();
