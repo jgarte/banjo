@@ -9,6 +9,7 @@ tasks:
 - test: |
     cd requinto
     npm install
+    npm run build
     node --test
 - build: |
     cd requinto
