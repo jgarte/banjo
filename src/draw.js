@@ -16,6 +16,8 @@
 
 import { notes } from "./notes.js";
 
+export const NOTE_RADIUS = 12;
+
 // This module renders the fretboard with the Canvas 2D API. All drawing goes
 // through a CanvasRenderingContext2D (`ctx`): the path methods (beginPath,
 // moveTo, lineTo, stroke) draw the fret and string lines, arc + fill/stroke
@@ -165,7 +167,7 @@ export function drawFretboard(
   // Draw circle at position
   ctx.fillStyle = "#FF6B6B";
   ctx.beginPath();
-  ctx.arc(x, y, 12, 0, 2 * Math.PI);
+  ctx.arc(x, y, NOTE_RADIUS, 0, 2 * Math.PI);
   ctx.fill();
 
   // If showing answer, display note name

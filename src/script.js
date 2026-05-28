@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { drawFretboard } from "./draw.js";
+import { drawFretboard, NOTE_RADIUS } from "./draw.js";
 import { notes } from "./notes.js";
 
 /** @type {import('./notes.js').Note | null} */
@@ -91,7 +91,7 @@ function handleCanvasClick(clientX, clientY) {
     Math.pow(clickX - notePos.x, 2) + Math.pow(clickY - notePos.y, 2),
   );
 
-  if (distance < 20) {
+  if (distance < NOTE_RADIUS * 1.5) {
     showAnswer();
   } else {
     nextQuestion();
