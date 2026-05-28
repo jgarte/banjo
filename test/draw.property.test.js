@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import * as fc from "fast-check";
-import { drawFretboard, drawFrets, drawNut, drawStrings } from "./src/draw.js";
+import { drawFretboard, drawFrets, drawNut, drawStrings } from "../src/draw.js";
 
 // Mock canvas context that tracks calls
 function createMockContext() {
