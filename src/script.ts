@@ -35,7 +35,7 @@ function nextNote(): void {
   drawFretboard(ctx, canvas, currentNote, showingAnswer);
 }
 
-function showAnswer(): void {
+function showNote(): void {
   if (!currentNote) return;
 
   showingAnswer = true;
@@ -90,7 +90,7 @@ function handleCanvasClick(clientX: number, clientY: number): void {
   );
 
   if (distance < NOTE_RADIUS * 1.5) {
-    showAnswer();
+    showNote();
   } else {
     nextNote();
   }
