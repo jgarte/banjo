@@ -4,7 +4,7 @@
 
 web app for training note recognition in open position on the tenor banjo
 
-https://requinto.whereis.social/
+https://banjo.whereis.social
 
 the tenor banjo is a four string instrument tuned in fifths (C-G-D-A),
 used in irish and jazz musics
@@ -13,13 +13,7 @@ used in irish and jazz musics
 
 - visual fretboard with interactive note practice
 - mobile-friendly responsive design
-- vanilla js and css
 - property-based tests check all note/state combinations
-
-## documentation
-
-- [control flow map](docs/control-flow.md) — module map, startup, state, and the main user paths
-
 
 ## license
 
