@@ -17,7 +17,7 @@
 import { notes } from "./notes.js";
 import type { Note } from "./notes.js";
 
-export const NOTE_RADIUS = 12;
+export const NOTE_RADIUS: number = 12;
 
 // This module renders the fretboard with the Canvas 2D API. All drawing goes
 // through a CanvasRenderingContext2D (`ctx`): the path methods (beginPath,
@@ -38,7 +38,7 @@ type FretboardConfig = {
 export function drawFrets(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
-  config: FretboardConfig
+  config: FretboardConfig,
 ): void {
   // Draw frets as horizontal lines via the path API: beginPath starts a path,
   // moveTo/lineTo define the segment, stroke renders it.
@@ -56,7 +56,7 @@ export function drawFrets(
 export function drawNut(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
-  config: FretboardConfig
+  config: FretboardConfig,
 ): void {
   // Draw nut (first fret thicker)
   ctx.lineWidth = 5;
@@ -69,7 +69,7 @@ export function drawNut(
 export function drawStrings(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
-  config: FretboardConfig
+  config: FretboardConfig,
 ): void {
   // Draw strings (vertical lines)
   ctx.strokeStyle = "#333";
@@ -87,7 +87,7 @@ export function drawFretboard(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
   currentNote: Note,
-  showingAnswer: boolean
+  showingAnswer: boolean,
 ): void {
   const config: FretboardConfig = {
     padding: 40,
@@ -149,9 +149,7 @@ export function drawFretboard(
     y = config.padding - 15;
   } else {
     y =
-      config.padding +
-      fretIndex * config.fretSpacing -
-      config.fretSpacing / 2;
+      config.padding + fretIndex * config.fretSpacing - config.fretSpacing / 2;
   }
 
   // Draw circle at position
