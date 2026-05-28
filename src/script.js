@@ -21,12 +21,6 @@ import { notes } from "./notes.js";
 let currentNote = null;
 let showingAnswer = false;
 
-// Double-tap/click detection
-let lastTapTime = 0;
-const DOUBLE_TAP_DELAY = 200; // milliseconds
-/** @type {number | null} */
-let singleTapTimeout = null;
-
 // DOM access: getElementById fetches the <canvas> element, and getContext("2d")
 // returns its CanvasRenderingContext2D — the handle used for all drawing (see
 // draw.js).
@@ -82,11 +76,6 @@ function getNotePosition(note) {
 function handleCanvasClick(clientX, clientY) {
   if (!currentNote) return;
 
-  const currentTime = Date.now();
-  const timeSinceLastTap = currentTime - lastTapTime;
-
-  lastTapTime = currentTime;
-
   // getBoundingClientRect gives the canvas's size/position in CSS pixels; we
   // scale the event's viewport coordinates into the canvas's internal pixel
   // grid (which can differ from its displayed size).
@@ -102,30 +91,11 @@ function handleCanvasClick(clientX, clientY) {
     Math.pow(clickX - notePos.x, 2) + Math.pow(clickY - notePos.y, 2),
   );
 
-  // Check for double tap
-  if (timeSinceLastTap < DOUBLE_TAP_DELAY) {
-    // Clear any pending single-tap action. setTimeout/clearTimeout (the WHATWG
-    // timer API) defer and cancel the single-tap handler below.
-    // https://developer.mozilla.org/en-US/docs/Web/API/clearTimeout
-    if (singleTapTimeout) {
-      clearTimeout(singleTapTimeout);
-      singleTapTimeout = null;
-    }
-    lastTapTime = 0; // Reset to prevent triple-tap
-    return;
+  if (distance < 20) {
+    showAnswer();
+  } else {
+    nextQuestion();
   }
-
-  // Delay the action with setTimeout to allow double-tap detection; the
-  // returned id is cleared above if a second tap arrives in time.
-  // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout
-  singleTapTimeout = setTimeout(() => {
-    if (distance < 20) {
-      showAnswer();
-    } else {
-      nextQuestion();
-    }
-    singleTapTimeout = null;
-  }, DOUBLE_TAP_DELAY);
 }
 
 
