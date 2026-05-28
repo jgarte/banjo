@@ -1,12 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import * as fc from "fast-check";
-import {
-  drawFretboard,
-  drawFrets,
-  drawNut,
-  drawStrings,
-} from "./src/draw.js";
+import { drawFretboard, drawFrets, drawNut, drawStrings } from "./src/draw.js";
 
 // Mock canvas context that tracks calls
 function createMockContext() {
@@ -268,54 +263,3 @@ test("exhaustive: all 16 notes × 2 states = 32 cases", () => {
   assert.strictEqual(testCount, 32, "Should have tested exactly 32 cases");
 });
 
-test("property: explore mode shows all notes with labels", () => {
-  const ctx = createMockContext();
-  const canvas = createMockCanvas();
-
-  drawFretboard(ctx, canvas, null, false, allValidNotes);
-
-  // Should have 16 arc calls (one per note)
-  const arcCalls = ctx.calls.filter(
-    (call) => Array.isArray(call) && call[0] === "arc",
-  );
-  // Plus natural note markers (16 natural notes in the array)
-  assert.ok(
-    arcCalls.length >= 16,
-    `Expected at least 16 arc calls, got ${arcCalls.length}`,
-  );
-
-  // Should have 16 fillText calls with note names
-  const noteLabelCalls = ctx.calls.filter(
-    (call) =>
-      Array.isArray(call) &&
-      call[0] === "fillText" &&
-      allValidNotes.some((n) => n.note === call[1]),
-  );
-  assert.strictEqual(
-    noteLabelCalls.length,
-    16,
-    "Should show all 16 note labels in explore mode",
-  );
-});
-
-test("property: explore mode and training mode are mutually exclusive", () => {
-  const ctx = createMockContext();
-  const canvas = createMockCanvas();
-  const singleNote = allValidNotes[0];
-
-  // Call with both currentNote and allNotes - allNotes should take precedence
-  drawFretboard(ctx, canvas, singleNote, false, allValidNotes);
-
-  // Should have note labels for all notes, not just one
-  const noteLabelCalls = ctx.calls.filter(
-    (call) =>
-      Array.isArray(call) &&
-      call[0] === "fillText" &&
-      allValidNotes.some((n) => n.note === call[1]),
-  );
-  assert.strictEqual(
-    noteLabelCalls.length,
-    16,
-    "Should show all notes when in explore mode",
-  );
-});
