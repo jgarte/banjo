@@ -7,9 +7,9 @@ export let currentNote: Note;
 let previousNote: Note;
 export let showingAnswer = false;
 
-const canvas = document.getElementById("fretboard") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-const config: FretboardConfig = createFretboardConfig(canvas);
+let canvas: HTMLCanvasElement;
+let ctx: CanvasRenderingContext2D;
+let config: FretboardConfig;
 
 function nextNote(): void {
   previousNote = currentNote;
@@ -77,8 +77,19 @@ async function handleCanvasClick(
   }
 }
 
-canvas.addEventListener("click", (e: MouseEvent) => {
-  handleCanvasClick(e.clientX, e.clientY);
-});
+function init(): void {
+  const canvasEl = document.getElementById("fretboard") as HTMLCanvasElement;
+  canvas = canvasEl;
+  ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+  config = createFretboardConfig(canvas);
 
-nextNote();
+  canvas.addEventListener("click", (e: MouseEvent) => {
+    handleCanvasClick(e.clientX, e.clientY);
+  });
+
+  nextNote();
+}
+
+if (typeof document !== "undefined") {
+  init();
+}
